@@ -1,15 +1,34 @@
 
-## Setting up python environment
+# New York City Taxi Fare Prediction
+![image.png](attachment:image.png)
+
+In this assignment, we will foresee the passage sum for a taxi ride in New York City, surrendered the pick, drop off areas and the date season of the get. We will begin from making an easiest model after some essential information cleaning, this straightforward model isn't Machine Learning, at that point we will move to more complex models. We should begin.
+
+## Environment setup for python
+At first, we have to import the python libraries which will be used in this project. Then we have to lead the tarin and test data. But our train data has almost 55M rows and it's quite impossible for us to use the whole dataset. That's why we'll a part of the dataset.
 
 
 ```python
-import numpy as np # pyton library for linear algebra
-import pandas as pd # python library for data processing (data manipulation and analysis)
-import matplotlib.pyplot as plt
+# This Python 3 environment comes with many helpful analytics libraries installed
+# It is defined by the kaggle/python Docker image: https://github.com/kaggle/docker-python
+# For example, here's several helpful packages to load
+
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+import matplotlib.pyplot as plt # for plotting 
+import seaborn as sns # high quality image
+sns.set()  # use Seaborn styles
+from collections import Counter
+# Input data files are available in the read-only "../input/" directory
+# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory
+
 import os
 for dirname, _, filenames in os.walk('/kaggle/input'):
     for filename in filenames:
         print(os.path.join(dirname, filename))
+
+# You can write up to 5GB to the current directory (/kaggle/working/) that gets preserved as output when you create a version using "Save & Run All" 
+# You can also write temporary files to /kaggle/temp/, but they won't be saved outside of the current session
 ```
 
     /kaggle/input/new-york-city-taxi-fare-prediction/GCP-Coupons-Instructions.rtf
@@ -18,76 +37,21 @@ for dirname, _, filenames in os.walk('/kaggle/input'):
     /kaggle/input/new-york-city-taxi-fare-prediction/sample_submission.csv
 
 
-### Setting up training and testing data
-
-As the training dataset is too large, we can not load whole dataset at the same time. So, we are skipping some part of the data.
-
 
 ```python
+#Here we're keeping out train dataset in "train_df" data frame and test dataset in "test_df" data frame.
 train_df = pd.read_csv('/kaggle/input/new-york-city-taxi-fare-prediction/train.csv', nrows = 10_000_000)
-```
-
-
-```python
 test_df = pd.read_csv('/kaggle/input/new-york-city-taxi-fare-prediction/test.csv')
 ```
 
+### dataset observations
+Now our 1st task is to carefully observe the test and train dataset using python's built in function.
 
-```python
-train_df.dtypes
-```
-
-
-
-
-    key                   object
-    fare_amount          float64
-    pickup_datetime       object
-    pickup_longitude     float64
-    pickup_latitude      float64
-    dropoff_longitude    float64
-    dropoff_latitude     float64
-    passenger_count        int64
-    dtype: object
-
-
+>01) At first, we're trying to find out the column's name & info of the train and test dataset
 
 
 ```python
-test_df.dtypes
-```
-
-
-
-
-    key                   object
-    pickup_datetime       object
-    pickup_longitude     float64
-    pickup_latitude      float64
-    dropoff_longitude    float64
-    dropoff_latitude     float64
-    passenger_count        int64
-    dtype: object
-
-
-
-
-```python
-# dataset shape
-
-print('train_df: ' + str(train_df.shape))
-print('test_df: ' + str(test_df.shape))
-```
-
-    train_df: (10000000, 8)
-    test_df: (9914, 7)
-
-
-
-```python
-# looking some sample data
-
-train_df.head(5)
+train_df.head()
 ```
 
 
@@ -185,8 +149,153 @@ train_df.head(5)
 
 
 ```python
-# describe training data
+test_df.head()
+```
 
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>key</th>
+      <th>pickup_datetime</th>
+      <th>pickup_longitude</th>
+      <th>pickup_latitude</th>
+      <th>dropoff_longitude</th>
+      <th>dropoff_latitude</th>
+      <th>passenger_count</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>2015-01-27 13:08:24.0000002</td>
+      <td>2015-01-27 13:08:24 UTC</td>
+      <td>-73.973320</td>
+      <td>40.763805</td>
+      <td>-73.981430</td>
+      <td>40.743835</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2015-01-27 13:08:24.0000003</td>
+      <td>2015-01-27 13:08:24 UTC</td>
+      <td>-73.986862</td>
+      <td>40.719383</td>
+      <td>-73.998886</td>
+      <td>40.739201</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2011-10-08 11:53:44.0000002</td>
+      <td>2011-10-08 11:53:44 UTC</td>
+      <td>-73.982524</td>
+      <td>40.751260</td>
+      <td>-73.979654</td>
+      <td>40.746139</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2012-12-01 21:12:12.0000002</td>
+      <td>2012-12-01 21:12:12 UTC</td>
+      <td>-73.981160</td>
+      <td>40.767807</td>
+      <td>-73.990448</td>
+      <td>40.751635</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2012-12-01 21:12:12.0000003</td>
+      <td>2012-12-01 21:12:12 UTC</td>
+      <td>-73.966046</td>
+      <td>40.789775</td>
+      <td>-73.988565</td>
+      <td>40.744427</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+02) Now the datetype of the train and test dataset are shown
+
+
+```python
+train_df.dtypes
+```
+
+
+
+
+    key                   object
+    fare_amount          float64
+    pickup_datetime       object
+    pickup_longitude     float64
+    pickup_latitude      float64
+    dropoff_longitude    float64
+    dropoff_latitude     float64
+    passenger_count        int64
+    dtype: object
+
+
+
+
+```python
+test_df.dtypes
+```
+
+
+
+
+    key                   object
+    pickup_datetime       object
+    pickup_longitude     float64
+    pickup_latitude      float64
+    dropoff_longitude    float64
+    dropoff_latitude     float64
+    passenger_count        int64
+    dtype: object
+
+
+
+03) here the dimension of the dataset is shown
+
+
+```python
+print('train_df: ' + str(train_df.shape))
+print('test_df: ' + str(test_df.shape))
+```
+
+    train_df: (10000000, 8)
+    test_df: (9914, 7)
+
+
+04) It's time to know some statistical information about the train and test dataset
+
+
+```python
 train_df.describe()
 ```
 
@@ -298,14 +407,118 @@ train_df.describe()
 
 
 
-# PART 1 -> DATA CLEANSING
 
-## Cleaning NaN / null values
+```python
+test_df.describe()
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>pickup_longitude</th>
+      <th>pickup_latitude</th>
+      <th>dropoff_longitude</th>
+      <th>dropoff_latitude</th>
+      <th>passenger_count</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>9914.000000</td>
+      <td>9914.000000</td>
+      <td>9914.000000</td>
+      <td>9914.000000</td>
+      <td>9914.000000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>-73.974722</td>
+      <td>40.751041</td>
+      <td>-73.973657</td>
+      <td>40.751743</td>
+      <td>1.671273</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>0.042774</td>
+      <td>0.033541</td>
+      <td>0.039072</td>
+      <td>0.035435</td>
+      <td>1.278747</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>-74.252193</td>
+      <td>40.573143</td>
+      <td>-74.263242</td>
+      <td>40.568973</td>
+      <td>1.000000</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>-73.992501</td>
+      <td>40.736125</td>
+      <td>-73.991247</td>
+      <td>40.735254</td>
+      <td>1.000000</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>-73.982326</td>
+      <td>40.753051</td>
+      <td>-73.980015</td>
+      <td>40.754065</td>
+      <td>1.000000</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>-73.968013</td>
+      <td>40.767113</td>
+      <td>-73.964059</td>
+      <td>40.768757</td>
+      <td>2.000000</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>-72.986532</td>
+      <td>41.709555</td>
+      <td>-72.990963</td>
+      <td>41.696683</td>
+      <td>6.000000</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+## Data cleaning
+In Machine Learning world data cleaning is the most important part of ML project. We on avg spend 85% of time on cleaning dataset because our ML model's result is going to extremely depends on data cleaning.
+##### Data cleaning will be applied on train data only
+
+01) Missig values: At first, we are going to resolve the missing values. Since out train dataset is huge so we're not going to generate missing value. We'll drop the missing rows.
 
 
 ```python
-# count and check how many null/missing values in training data
-
 print(train_df.isnull().sum())
 ```
 
@@ -322,24 +535,48 @@ print(train_df.isnull().sum())
 
 
 ```python
-# remove all null valued fields from the training datset
-
-print('Training data: Previous size: ' + str(len(train_df)))
+print('Old size: %d' % len(train_df))
 train_df = train_df.dropna(how = 'any', axis = 'rows')
-print('Training data: Updated size: ' + str(len(train_df)))
+print('New size: %d' % len(train_df))
 ```
 
-    Training data: Previous size: 10000000
-    Training data: Updated size: 9999931
+    Old size: 10000000
+    New size: 9999931
 
-
-## Remove negative fare amount
-
-Fare amount can not be zero or negative. So, we can remove these fields.
 
 
 ```python
-# check the target column first
+print(train_df.isnull().sum())
+```
+
+    key                  0
+    fare_amount          0
+    pickup_datetime      0
+    pickup_longitude     0
+    pickup_latitude      0
+    dropoff_longitude    0
+    dropoff_latitude     0
+    passenger_count      0
+    dtype: int64
+
+
+02) Valied fare: A valied fare is always positive number. So we have to remove the fare which are less than or equal to Zero.
+
+
+```python
+# count how many negative and Zero values are here
+Counter(train_df['fare_amount'] <= 0)
+```
+
+
+
+
+    Counter({False: 9999242, True: 689})
+
+
+
+
+```python
 train_df['fare_amount'].describe()
 ```
 
@@ -358,28 +595,8 @@ train_df['fare_amount'].describe()
 
 
 
-###### yes, negative values exist
-# count how many negative and Zero values are here
-
-from collections import Counter
-Counter(train_df['fare_amount'] < 0) and fare can't be zero!
-
 
 ```python
-from collections import Counter
-Counter(train_df['fare_amount'] <= 0)
-```
-
-
-
-
-    Counter({False: 9999242, True: 689})
-
-
-
-
-```python
-# remove these fields from dataset
 print('before: ' + str(train_df.shape))
 train_df = train_df.drop(train_df[train_df['fare_amount'] <= 0].index, axis = 0)
 print('after: ' + str(train_df.shape))
@@ -391,8 +608,6 @@ print('after: ' + str(train_df.shape))
 
 
 ```python
-# now check again
-
 train_df['fare_amount'].describe()
 ```
 
@@ -411,9 +626,7 @@ train_df['fare_amount'].describe()
 
 
 
-no more invalied fare value, yahoooo!
-
-## Check passenger_count variable
+03) passenger_count: This value is always greater than or equal to one. On the other hand, a standard size taxi can carry max 6 people. So we are assuming that a valied passenger_count is greater tnan equal to One and less than or equal to Six.
 
 
 ```python
@@ -437,32 +650,6 @@ train_df['passenger_count'].describe()
 
 
 ```python
-train_df['passenger_count'].sort_values(ascending=False)
-```
-
-
-
-
-    2154045    208
-    2910347    208
-    4103745    208
-    3107489    208
-    7001143    208
-              ... 
-    2550560      0
-    9688764      0
-    189239       0
-    6344835      0
-    7974314      0
-    Name: passenger_count, Length: 9999242, dtype: int64
-
-
-
-The number of passenger must be at least one. On the other hand, a stranded size taxi can't have passengers more than 6. That is we're only keeping the rows, those have passengers [1, 6]
-
-
-```python
-# remove these fields from dataset
 print('before: ' + str(train_df.shape))
 train_df = train_df.drop(train_df[train_df['passenger_count'] <= 0].index, axis = 0) # remove numbers less or equal 0
 train_df = train_df.drop(train_df[train_df['passenger_count'] > 6].index, axis = 0) # remove numbers greater or equal 0
@@ -493,282 +680,9 @@ train_df['passenger_count'].describe()
 
 
 
-# Feature Engineering
+## Feature Engineering
 
-
-```python
-# calculate logtitude and latitude dif and add as feature
-
-def add_distance_dif_features(df):
-    df['longitude_distance'] = abs(df['pickup_longitude'] - df['dropoff_longitude'])
-    df['latitude_distance'] = abs(df['pickup_latitude'] - df['dropoff_latitude'])
-    return df
-    
-train_df = add_distance_dif_features(train_df)
-```
-
-
-```python
-# calculate straight distance and add as feature
-
-def calculate_add_distance_feature(df):
-    df['distance'] = (df['longitude_distance'] ** 2 + df['latitude_distance'] ** 2) ** .5
-    return df
-    
-train_df = calculate_add_distance_feature(train_df)
-```
-
-
-```python
-# remove unlealistic distance valued fields from dataset
-# we assume unrealistic distnace which are less than 0.1 miles
-
-def drop_unrealistic_distance(df):
-    print('before: ' + str(df.shape))
-    df = df.drop(df[train_df['distance'] < 0.01].index, axis = 0)
-    print('after: ' + str(df.shape))
-    return df
-    
-train_df = drop_unrealistic_distance(train_df)
-```
-
-    before: (9963965, 11)
-    after: (8224381, 11)
-
-
-
-```python
-train_df.groupby('passenger_count')['distance','fare_amount'].mean()
-```
-
-    /opt/conda/lib/python3.7/site-packages/ipykernel_launcher.py:1: FutureWarning: Indexing with multiple keys (implicitly converted to a tuple of keys) will be deprecated, use a list instead.
-      """Entry point for launching an IPython kernel.
-
-
-
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>distance</th>
-      <th>fare_amount</th>
-    </tr>
-    <tr>
-      <th>passenger_count</th>
-      <th></th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>1</th>
-      <td>0.325402</td>
-      <td>12.198541</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>0.263791</td>
-      <td>12.840180</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>0.260806</td>
-      <td>12.545002</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>0.307009</td>
-      <td>12.743767</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>0.227303</td>
-      <td>12.284363</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>0.390197</td>
-      <td>13.371031</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-
-
-
-```python
-print(f'average_fare: {train_df.fare_amount.sum()/train_df.distance.sum()}')
-```
-
-    average_fare: 40.19018345014175
-
-
-#### Time Range of train and test dataset
-
-
-```python
-def print_time_range(df1, df2):
-    train_df_time_start = df1.pickup_datetime.min()
-    train_df_time_end = df1.pickup_datetime.max()
-    print("Train Datqaset Time Starts: {}, Ends {}".format(train_df_time_start, train_df_time_end))
-    
-    test_df_time_start = df2.pickup_datetime.min()
-    test_df_time_end = df2.pickup_datetime.max()
-    print("Test Dataset Time Starts: {}, Ends {}".format(test_df_time_start, test_df_time_end))
-
-print_time_range(train_df, test_df)
-```
-
-    Train Datqaset Time Starts: 2009-01-01 00:00:46 UTC, Ends 2015-06-30 23:59:54 UTC
-    Test Dataset Time Starts: 2009-01-01 11:04:24 UTC, Ends 2015-06-30 20:03:50 UTC
-
-
-### Plots and Diagrams
-
-
-```python
-train_df.passenger_count.hist()
-```
-
-
-
-
-    <matplotlib.axes._subplots.AxesSubplot at 0x7ff748370b50>
-
-
-
-
-![png](output_36_1.png)
-
-
-
-```python
-plt.figure(figsize=(28,8))
-plt.hist(train_df["fare_amount"], 500, facecolor="purple")
-plt.xlabel("Fare amount")
-plt.ylabel("Count")
-plt.title("Fare Amount Histogram")
-plt.xlim(0,100)
-```
-
-
-
-
-    (0.0, 100.0)
-
-
-
-
-![png](output_37_1.png)
-
-
-
-```python
-train_df["passenger_count"].value_counts().plot.bar()
-plt.title("Passenger count Histogram")
-plt.xlabel("Passenger Count")
-plt.ylabel("Frequency")
-```
-
-
-
-
-    Text(0, 0.5, 'Frequency')
-
-
-
-
-![png](output_38_1.png)
-
-
-
-```python
-train_df.distance.describe()
-```
-
-
-
-
-    count    8.224381e+06
-    mean     3.073621e-01
-    std      1.539901e+01
-    min      1.000000e-02
-    25%      1.675648e-02
-    50%      2.570094e-02
-    75%      4.397095e-02
-    max      7.548848e+03
-    Name: distance, dtype: float64
-
-
-
-
-```python
-train_df["distance"].hist(figsize=(12,4))
-plt.title("Histogram ride distance");
-```
-
-
-![png](output_40_0.png)
-
-
-
-```python
-train_df["fare_per_distance"] = train_df["fare_amount"] / train_df["distance"]
-train_df["fare_per_distance"].describe()
-```
-
-
-
-
-    count    8.224381e+06
-    mean     3.745553e+02
-    std      1.526987e+02
-    min      1.183805e-04
-    25%      2.830627e+02
-    50%      3.509738e+02
-    75%      4.348068e+02
-    max      1.891399e+04
-    Name: fare_per_distance, dtype: float64
-
-
-
-
-```python
-plt.figure(figsize=(28,8))
-plt.scatter(train_df["distance"], train_df["fare_per_distance"])
-plt.xlabel("distance")
-plt.ylabel("fare per distance")
-plt.xlim(0,40)
-plt.title("Scatter DIagram of fare-amount")
-```
-
-
-
-
-    Text(0.5, 1.0, 'Scatter DIagram of fare-amount')
-
-
-
-
-![png](output_42_1.png)
-
+01) Time: Taxi fare heavily depends on time. For example: in holydays, people do visit a lot. On the other hand during reany season people hardy go outside. Moreover, in the mid night people don't go outside without important reason. On the other hand, people go outside during festival eg: xmas days. So time plays an important role in taxi fare. That's why we'll do categories the data base on time(hour, weekday, month, year).
 
 
 ```python
@@ -782,8 +696,11 @@ def add_time_features(df):
     df['year'] = df.pickup_datetime.dt.year
     
     return df
+```
 
-train_df = add_time_features(train_df)
+
+```python
+train_df = add_time_features(train_df) # adding some columns to train dataset
 ```
 
 
@@ -820,10 +737,6 @@ train_df.head()
       <th>dropoff_longitude</th>
       <th>dropoff_latitude</th>
       <th>passenger_count</th>
-      <th>longitude_distance</th>
-      <th>latitude_distance</th>
-      <th>distance</th>
-      <th>fare_per_distance</th>
       <th>hour</th>
       <th>weekday</th>
       <th>month</th>
@@ -831,6 +744,21 @@ train_df.head()
     </tr>
   </thead>
   <tbody>
+    <tr>
+      <th>0</th>
+      <td>2009-06-15 17:26:21.0000001</td>
+      <td>4.5</td>
+      <td>2009-06-15 17:26:21</td>
+      <td>-73.844311</td>
+      <td>40.721319</td>
+      <td>-73.841610</td>
+      <td>40.712278</td>
+      <td>1</td>
+      <td>17</td>
+      <td>0</td>
+      <td>6</td>
+      <td>2009</td>
+    </tr>
     <tr>
       <th>1</th>
       <td>2010-01-05 16:52:16.0000002</td>
@@ -841,10 +769,6 @@ train_df.head()
       <td>-73.979268</td>
       <td>40.782004</td>
       <td>1</td>
-      <td>0.036780</td>
-      <td>0.070701</td>
-      <td>0.079696</td>
-      <td>212.056690</td>
       <td>16</td>
       <td>1</td>
       <td>1</td>
@@ -860,10 +784,6 @@ train_df.head()
       <td>-73.991242</td>
       <td>40.750562</td>
       <td>2</td>
-      <td>0.008504</td>
-      <td>0.010708</td>
-      <td>0.013674</td>
-      <td>416.848376</td>
       <td>0</td>
       <td>3</td>
       <td>8</td>
@@ -879,10 +799,6 @@ train_df.head()
       <td>-73.991567</td>
       <td>40.758092</td>
       <td>1</td>
-      <td>0.004437</td>
-      <td>0.024949</td>
-      <td>0.025340</td>
-      <td>303.861732</td>
       <td>4</td>
       <td>5</td>
       <td>4</td>
@@ -898,33 +814,10 @@ train_df.head()
       <td>-73.956655</td>
       <td>40.783762</td>
       <td>1</td>
-      <td>0.011440</td>
-      <td>0.015754</td>
-      <td>0.019470</td>
-      <td>272.220407</td>
       <td>7</td>
       <td>1</td>
       <td>3</td>
       <td>2010</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>2011-01-06 09:50:45.0000002</td>
-      <td>12.1</td>
-      <td>2011-01-06 09:50:45</td>
-      <td>-74.000964</td>
-      <td>40.731630</td>
-      <td>-73.972892</td>
-      <td>40.758233</td>
-      <td>1</td>
-      <td>0.028072</td>
-      <td>0.026603</td>
-      <td>0.038675</td>
-      <td>312.863485</td>
-      <td>9</td>
-      <td>3</td>
-      <td>1</td>
-      <td>2011</td>
     </tr>
   </tbody>
 </table>
@@ -932,25 +825,214 @@ train_df.head()
 
 
 
+02) Location: Let's build two new features in our training set that represent the "travel vector" in both longitude and latitude coordinates between the start and end points of the taxi trip. As we're just interested in the distance travelled, we'll take the absolute value. Using a helper feature so later on we may want to do the same thing with the test collection.
+
 
 ```python
-#train_df['hour'] = train_df["pickup_datetime"].apply(lambda t: pd.to_datetime(t).hour)
-#train_df['year'] = train_df["pickup_datetime"].apply(lambda t: pd.to_datetime(t).year)
-#train_df['weekday'] = train_df["pickup_datetime"].apply(lambda t: pd.to_datetime(t).weekday())
-train_df.pivot_table("fare_per_distance", index="hour", columns="year").plot(figsize=(28,12))
-plt.ylabel("Fare $USD / distance");
-plt.title("Fare variation in years")
+def add_travel_vector_features(df):
+    df['abs_diff_longitude'] = (df.dropoff_longitude - df.pickup_longitude).abs()
+    df['abs_diff_latitude'] = (df.dropoff_latitude - df.pickup_latitude).abs()
+
+```
+
+
+```python
+add_travel_vector_features(train_df)
+```
+
+
+```python
+# calculate straight distance and add as feature
+
+def calculate_add_distance_feature(df):
+    df['distance'] = (df['abs_diff_longitude'] ** 2 + df['abs_diff_latitude'] ** 2) ** .5
+    return df
+    
+train_df = calculate_add_distance_feature(train_df)
+
+```
+
+
+```python
+train_df["distance"].hist(figsize=(12,4))
+plt.title("Histogram ride distance");
+```
+
+
+![png](output_40_0.png)
+
+
+
+```python
+train_df['distance'].describe()
 ```
 
 
 
 
-    Text(0.5, 1.0, 'Fare variation in years')
+    count    9.963965e+06
+    mean     2.547027e-01
+    std      1.399081e+01
+    min      0.000000e+00
+    25%      1.239305e-02
+    50%      2.143539e-02
+    75%      3.835107e-02
+    max      7.548848e+03
+    Name: distance, dtype: float64
+
+
+
+We expect most of these values to be very small (likely between 0 and 1) since it should all be differences between GPS coordinates within one city. For reference, one degree of latitude is about 69 miles. However, we can see the dataset has extreme values which do not make sense. Let's remove those values from our training set. Based on the scatterplot, it looks like we can safely exclude values above 5 (though remember the scatterplot is only showing the first 2000 rows...)
+
+
+```python
+print('Old size: %d' % len(train_df))
+train_df = train_df[(train_df.abs_diff_longitude < 5.0) & (train_df.abs_diff_latitude < 5.0)]
+print('New size: %d' % len(train_df))
+```
+
+    Old size: 9963965
+    New size: 9943523
+
+
+
+```python
+train_df.head()
+```
 
 
 
 
-![png](output_45_1.png)
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>key</th>
+      <th>fare_amount</th>
+      <th>pickup_datetime</th>
+      <th>pickup_longitude</th>
+      <th>pickup_latitude</th>
+      <th>dropoff_longitude</th>
+      <th>dropoff_latitude</th>
+      <th>passenger_count</th>
+      <th>hour</th>
+      <th>weekday</th>
+      <th>month</th>
+      <th>year</th>
+      <th>abs_diff_longitude</th>
+      <th>abs_diff_latitude</th>
+      <th>distance</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>2009-06-15 17:26:21.0000001</td>
+      <td>4.5</td>
+      <td>2009-06-15 17:26:21</td>
+      <td>-73.844311</td>
+      <td>40.721319</td>
+      <td>-73.841610</td>
+      <td>40.712278</td>
+      <td>1</td>
+      <td>17</td>
+      <td>0</td>
+      <td>6</td>
+      <td>2009</td>
+      <td>0.002701</td>
+      <td>0.009041</td>
+      <td>0.009436</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2010-01-05 16:52:16.0000002</td>
+      <td>16.9</td>
+      <td>2010-01-05 16:52:16</td>
+      <td>-74.016048</td>
+      <td>40.711303</td>
+      <td>-73.979268</td>
+      <td>40.782004</td>
+      <td>1</td>
+      <td>16</td>
+      <td>1</td>
+      <td>1</td>
+      <td>2010</td>
+      <td>0.036780</td>
+      <td>0.070701</td>
+      <td>0.079696</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2011-08-18 00:35:00.00000049</td>
+      <td>5.7</td>
+      <td>2011-08-18 00:35:00</td>
+      <td>-73.982738</td>
+      <td>40.761270</td>
+      <td>-73.991242</td>
+      <td>40.750562</td>
+      <td>2</td>
+      <td>0</td>
+      <td>3</td>
+      <td>8</td>
+      <td>2011</td>
+      <td>0.008504</td>
+      <td>0.010708</td>
+      <td>0.013674</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2012-04-21 04:30:42.0000001</td>
+      <td>7.7</td>
+      <td>2012-04-21 04:30:42</td>
+      <td>-73.987130</td>
+      <td>40.733143</td>
+      <td>-73.991567</td>
+      <td>40.758092</td>
+      <td>1</td>
+      <td>4</td>
+      <td>5</td>
+      <td>4</td>
+      <td>2012</td>
+      <td>0.004437</td>
+      <td>0.024949</td>
+      <td>0.025340</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2010-03-09 07:51:00.000000135</td>
+      <td>5.3</td>
+      <td>2010-03-09 07:51:00</td>
+      <td>-73.968095</td>
+      <td>40.768008</td>
+      <td>-73.956655</td>
+      <td>40.783762</td>
+      <td>1</td>
+      <td>7</td>
+      <td>1</td>
+      <td>3</td>
+      <td>2010</td>
+      <td>0.011440</td>
+      <td>0.015754</td>
+      <td>0.019470</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
 
 
 
@@ -985,157 +1067,432 @@ train_df.describe()
       <th>dropoff_longitude</th>
       <th>dropoff_latitude</th>
       <th>passenger_count</th>
-      <th>longitude_distance</th>
-      <th>latitude_distance</th>
-      <th>distance</th>
-      <th>fare_per_distance</th>
       <th>hour</th>
       <th>weekday</th>
       <th>month</th>
       <th>year</th>
+      <th>abs_diff_longitude</th>
+      <th>abs_diff_latitude</th>
+      <th>distance</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>count</th>
-      <td>8.224381e+06</td>
-      <td>8.224381e+06</td>
-      <td>8.224381e+06</td>
-      <td>8.224381e+06</td>
-      <td>8.224381e+06</td>
-      <td>8.224381e+06</td>
-      <td>8.224381e+06</td>
-      <td>8.224381e+06</td>
-      <td>8.224381e+06</td>
-      <td>8.224381e+06</td>
-      <td>8.224381e+06</td>
-      <td>8.224381e+06</td>
-      <td>8.224381e+06</td>
-      <td>8.224381e+06</td>
+      <td>9.943523e+06</td>
+      <td>9.943523e+06</td>
+      <td>9.943523e+06</td>
+      <td>9.943523e+06</td>
+      <td>9.943523e+06</td>
+      <td>9.943523e+06</td>
+      <td>9.943523e+06</td>
+      <td>9.943523e+06</td>
+      <td>9.943523e+06</td>
+      <td>9.943523e+06</td>
+      <td>9.943523e+06</td>
+      <td>9.943523e+06</td>
+      <td>9.943523e+06</td>
     </tr>
     <tr>
       <th>mean</th>
-      <td>1.235294e+01</td>
-      <td>-7.383737e+01</td>
-      <td>4.065059e+01</td>
-      <td>-7.383914e+01</td>
-      <td>4.065062e+01</td>
-      <td>1.692171e+00</td>
-      <td>2.444028e-01</td>
-      <td>1.471858e-01</td>
-      <td>3.073621e-01</td>
-      <td>3.745553e+02</td>
-      <td>1.352322e+01</td>
-      <td>3.055804e+00</td>
-      <td>6.278639e+00</td>
-      <td>2.011753e+03</td>
+      <td>1.134003e+01</td>
+      <td>-7.256882e+01</td>
+      <td>3.995091e+01</td>
+      <td>-7.256796e+01</td>
+      <td>3.995125e+01</td>
+      <td>1.690605e+00</td>
+      <td>1.351120e+01</td>
+      <td>3.041393e+00</td>
+      <td>6.267350e+00</td>
+      <td>2.011739e+03</td>
+      <td>2.251546e-02</td>
+      <td>2.111498e-02</td>
+      <td>3.377464e-02</td>
     </tr>
     <tr>
       <th>std</th>
-      <td>9.813382e+00</td>
-      <td>8.501846e+00</td>
-      <td>7.732585e+00</td>
-      <td>8.247128e+00</td>
-      <td>7.606393e+00</td>
-      <td>1.305173e+00</td>
-      <td>1.165078e+01</td>
-      <td>1.006985e+01</td>
-      <td>1.539901e+01</td>
-      <td>1.526987e+02</td>
-      <td>6.589296e+00</td>
-      <td>1.953371e+00</td>
-      <td>3.426042e+00</td>
-      <td>1.862018e+00</td>
+      <td>9.780789e+00</td>
+      <td>1.075765e+01</td>
+      <td>6.592764e+00</td>
+      <td>1.075754e+01</td>
+      <td>6.592813e+00</td>
+      <td>1.306535e+00</td>
+      <td>6.517226e+00</td>
+      <td>1.949076e+00</td>
+      <td>3.434898e+00</td>
+      <td>1.862968e+00</td>
+      <td>3.854393e-02</td>
+      <td>2.896195e-02</td>
+      <td>4.622220e-02</td>
     </tr>
     <tr>
       <th>min</th>
       <td>1.000000e-02</td>
-      <td>-3.439245e+03</td>
-      <td>-3.492264e+03</td>
-      <td>-3.426601e+03</td>
-      <td>-3.461541e+03</td>
+      <td>-3.348349e+03</td>
+      <td>-3.488080e+03</td>
+      <td>-3.348349e+03</td>
+      <td>-3.488080e+03</td>
       <td>1.000000e+00</td>
-      <td>0.000000e+00</td>
-      <td>0.000000e+00</td>
-      <td>1.000000e-02</td>
-      <td>1.183805e-04</td>
       <td>0.000000e+00</td>
       <td>0.000000e+00</td>
       <td>1.000000e+00</td>
       <td>2.009000e+03</td>
+      <td>0.000000e+00</td>
+      <td>0.000000e+00</td>
+      <td>0.000000e+00</td>
     </tr>
     <tr>
       <th>25%</th>
-      <td>6.900000e+00</td>
-      <td>-7.399247e+01</td>
-      <td>4.073564e+01</td>
-      <td>-7.399165e+01</td>
-      <td>4.073452e+01</td>
+      <td>6.000000e+00</td>
+      <td>-7.399209e+01</td>
+      <td>4.073497e+01</td>
+      <td>-7.399140e+01</td>
+      <td>4.073409e+01</td>
       <td>1.000000e+00</td>
-      <td>8.941000e-03</td>
-      <td>1.008126e-02</td>
-      <td>1.675648e-02</td>
-      <td>2.830627e+02</td>
       <td>9.000000e+00</td>
       <td>1.000000e+00</td>
       <td>3.000000e+00</td>
       <td>2.010000e+03</td>
+      <td>5.790000e-03</td>
+      <td>6.575000e-03</td>
+      <td>1.237743e-02</td>
     </tr>
     <tr>
       <th>50%</th>
-      <td>9.300000e+00</td>
-      <td>-7.398215e+01</td>
-      <td>4.075286e+01</td>
-      <td>-7.398037e+01</td>
-      <td>4.075347e+01</td>
+      <td>8.500000e+00</td>
+      <td>-7.398183e+01</td>
+      <td>4.075266e+01</td>
+      <td>-7.398018e+01</td>
+      <td>4.075318e+01</td>
       <td>1.000000e+00</td>
-      <td>1.542900e-02</td>
-      <td>1.733300e-02</td>
-      <td>2.570094e-02</td>
-      <td>3.509738e+02</td>
       <td>1.400000e+01</td>
       <td>3.000000e+00</td>
       <td>6.000000e+00</td>
       <td>2.012000e+03</td>
+      <td>1.240000e-02</td>
+      <td>1.383000e-02</td>
+      <td>2.139010e-02</td>
     </tr>
     <tr>
       <th>75%</th>
-      <td>1.370000e+01</td>
-      <td>-7.396829e+01</td>
-      <td>4.076747e+01</td>
-      <td>-7.396455e+01</td>
-      <td>4.076847e+01</td>
+      <td>1.250000e+01</td>
+      <td>-7.396717e+01</td>
+      <td>4.076714e+01</td>
+      <td>-7.396375e+01</td>
+      <td>4.076812e+01</td>
       <td>2.000000e+00</td>
-      <td>2.717300e-02</td>
-      <td>3.091300e-02</td>
-      <td>4.397095e-02</td>
-      <td>4.348068e+02</td>
       <td>1.900000e+01</td>
       <td>5.000000e+00</td>
       <td>9.000000e+00</td>
       <td>2.013000e+03</td>
+      <td>2.359900e-02</td>
+      <td>2.682700e-02</td>
+      <td>3.817623e-02</td>
     </tr>
     <tr>
       <th>max</th>
-      <td>9.520000e+02</td>
-      <td>3.457626e+03</td>
-      <td>3.344459e+03</td>
-      <td>3.457622e+03</td>
-      <td>3.351403e+03</td>
+      <td>1.273310e+03</td>
+      <td>3.442185e+03</td>
+      <td>2.973980e+03</td>
+      <td>3.442185e+03</td>
+      <td>2.973980e+03</td>
       <td>6.000000e+00</td>
-      <td>6.755629e+03</td>
-      <td>5.501513e+03</td>
-      <td>7.548848e+03</td>
-      <td>1.891399e+04</td>
       <td>2.300000e+01</td>
       <td>6.000000e+00</td>
       <td>1.200000e+01</td>
       <td>2.015000e+03</td>
+      <td>4.975685e+00</td>
+      <td>4.991325e+00</td>
+      <td>6.315736e+00</td>
     </tr>
   </tbody>
 </table>
 </div>
 
+
+
+## data visualization
+<i>a picture is worth a thousand words</i><br>
+In this part well do plot the data so that we can see the real picture. This will give us clear idea about the dataset and problem as well.
+
+
+```python
+train_df.passenger_count.hist()
+```
+
+
+
+
+    <matplotlib.axes._subplots.AxesSubplot at 0x7f1a5585b790>
+
+
+
+
+![png](output_47_1.png)
+
+
+
+```python
+plt.figure(figsize=(28,8))
+plt.hist(train_df["fare_amount"], 500, facecolor="purple")
+plt.xlabel("Fare amount")
+plt.ylabel("Count")
+plt.title("Fare Amount Histogram")
+plt.xlim(0,100)
+
+```
+
+
+
+
+    (0.0, 100.0)
+
+
+
+
+![png](output_48_1.png)
+
+
+
+```python
+train_df["passenger_count"].value_counts().plot.bar()
+plt.title("Passenger count Histogram")
+plt.xlabel("Passenger Count")
+plt.ylabel("Frequency")
+
+```
+
+
+
+
+    Text(0, 0.5, 'Frequency')
+
+
+
+
+![png](output_49_1.png)
+
+
+
+```python
+def drop_unrealistic_distance(df):
+    print('before: ' + str(df.shape))
+    df = df.drop(df[train_df['distance'] < 0.01].index, axis = 0)
+    print('after: ' + str(df.shape))
+    return df
+    
+train_df = drop_unrealistic_distance(train_df)
+
+```
+
+    before: (9943523, 15)
+    after: (8203939, 15)
+
+
+
+```python
+train_df["fare_per_distance"] = train_df["fare_amount"] / train_df["distance"]
+train_df["fare_per_distance"].describe()
+```
+
+
+
+
+    count    8.203939e+06
+    mean     3.754881e+02
+    std      1.517397e+02
+    min      4.715623e-02
+    25%      2.835819e+02
+    50%      3.513208e+02
+    75%      4.350787e+02
+    max      1.891399e+04
+    Name: fare_per_distance, dtype: float64
+
+
+
+
+```python
+plt.figure(figsize=(28,8))
+plt.scatter(train_df["distance"], train_df["fare_per_distance"])
+plt.xlabel("distance")
+plt.ylabel("fare per distance")
+plt.xlim(0,40)
+plt.title("Scatter DIagram of fare-amount")
+```
+
+
+
+
+    Text(0.5, 1.0, 'Scatter DIagram of fare-amount')
+
+
+
+
+![png](output_52_1.png)
+
+
+
+```python
+train_df.head()
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>key</th>
+      <th>fare_amount</th>
+      <th>pickup_datetime</th>
+      <th>pickup_longitude</th>
+      <th>pickup_latitude</th>
+      <th>dropoff_longitude</th>
+      <th>dropoff_latitude</th>
+      <th>passenger_count</th>
+      <th>hour</th>
+      <th>weekday</th>
+      <th>month</th>
+      <th>year</th>
+      <th>abs_diff_longitude</th>
+      <th>abs_diff_latitude</th>
+      <th>distance</th>
+      <th>fare_per_distance</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1</th>
+      <td>2010-01-05 16:52:16.0000002</td>
+      <td>16.9</td>
+      <td>2010-01-05 16:52:16</td>
+      <td>-74.016048</td>
+      <td>40.711303</td>
+      <td>-73.979268</td>
+      <td>40.782004</td>
+      <td>1</td>
+      <td>16</td>
+      <td>1</td>
+      <td>1</td>
+      <td>2010</td>
+      <td>0.036780</td>
+      <td>0.070701</td>
+      <td>0.079696</td>
+      <td>212.056690</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2011-08-18 00:35:00.00000049</td>
+      <td>5.7</td>
+      <td>2011-08-18 00:35:00</td>
+      <td>-73.982738</td>
+      <td>40.761270</td>
+      <td>-73.991242</td>
+      <td>40.750562</td>
+      <td>2</td>
+      <td>0</td>
+      <td>3</td>
+      <td>8</td>
+      <td>2011</td>
+      <td>0.008504</td>
+      <td>0.010708</td>
+      <td>0.013674</td>
+      <td>416.848376</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2012-04-21 04:30:42.0000001</td>
+      <td>7.7</td>
+      <td>2012-04-21 04:30:42</td>
+      <td>-73.987130</td>
+      <td>40.733143</td>
+      <td>-73.991567</td>
+      <td>40.758092</td>
+      <td>1</td>
+      <td>4</td>
+      <td>5</td>
+      <td>4</td>
+      <td>2012</td>
+      <td>0.004437</td>
+      <td>0.024949</td>
+      <td>0.025340</td>
+      <td>303.861732</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2010-03-09 07:51:00.000000135</td>
+      <td>5.3</td>
+      <td>2010-03-09 07:51:00</td>
+      <td>-73.968095</td>
+      <td>40.768008</td>
+      <td>-73.956655</td>
+      <td>40.783762</td>
+      <td>1</td>
+      <td>7</td>
+      <td>1</td>
+      <td>3</td>
+      <td>2010</td>
+      <td>0.011440</td>
+      <td>0.015754</td>
+      <td>0.019470</td>
+      <td>272.220407</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>2011-01-06 09:50:45.0000002</td>
+      <td>12.1</td>
+      <td>2011-01-06 09:50:45</td>
+      <td>-74.000964</td>
+      <td>40.731630</td>
+      <td>-73.972892</td>
+      <td>40.758233</td>
+      <td>1</td>
+      <td>9</td>
+      <td>3</td>
+      <td>1</td>
+      <td>2011</td>
+      <td>0.028072</td>
+      <td>0.026603</td>
+      <td>0.038675</td>
+      <td>312.863485</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+
+```python
+train_df.pivot_table('fare_per_distance', index='hour', columns='year').plot(figsize=(28,12))
+plt.ylabel("Fare $USD / distance");
+plt.title("Fare variation in years")
+```
+
+
+
+
+    Text(0.5, 1.0, 'Fare variation in years')
+
+
+
+
+![png](output_54_1.png)
 
 
 
@@ -1153,7 +1510,7 @@ plt.title("Fare variation in month")
 
 
 
-![png](output_47_1.png)
+![png](output_55_1.png)
 
 
 
@@ -1171,7 +1528,7 @@ plt.title("Fare variation in week days")
 
 
 
-![png](output_48_1.png)
+![png](output_56_1.png)
 
 
 
@@ -1197,10 +1554,10 @@ axs[1].set_title("Zoom in on distance < 15  and fare < $100")
 
 
 
-![png](output_49_1.png)
+![png](output_57_1.png)
 
 
-### Train our model
+## Train our model
 
 
 ```python
@@ -1218,14 +1575,14 @@ train_df.dtypes
     dropoff_longitude            float64
     dropoff_latitude             float64
     passenger_count                int64
-    longitude_distance           float64
-    latitude_distance            float64
-    distance                     float64
-    fare_per_distance            float64
     hour                           int64
     weekday                        int64
     month                          int64
     year                           int64
+    abs_diff_longitude           float64
+    abs_diff_latitude            float64
+    distance                     float64
+    fare_per_distance            float64
     dtype: object
 
 
@@ -1238,7 +1595,7 @@ train_df.shape
 
 
 
-    (8224381, 16)
+    (8203939, 16)
 
 
 
@@ -1276,14 +1633,14 @@ train_df.head()
       <th>dropoff_longitude</th>
       <th>dropoff_latitude</th>
       <th>passenger_count</th>
-      <th>longitude_distance</th>
-      <th>latitude_distance</th>
-      <th>distance</th>
-      <th>fare_per_distance</th>
       <th>hour</th>
       <th>weekday</th>
       <th>month</th>
       <th>year</th>
+      <th>abs_diff_longitude</th>
+      <th>abs_diff_latitude</th>
+      <th>distance</th>
+      <th>fare_per_distance</th>
     </tr>
   </thead>
   <tbody>
@@ -1297,14 +1654,14 @@ train_df.head()
       <td>-73.979268</td>
       <td>40.782004</td>
       <td>1</td>
-      <td>0.036780</td>
-      <td>0.070701</td>
-      <td>0.079696</td>
-      <td>212.056690</td>
       <td>16</td>
       <td>1</td>
       <td>1</td>
       <td>2010</td>
+      <td>0.036780</td>
+      <td>0.070701</td>
+      <td>0.079696</td>
+      <td>212.056690</td>
     </tr>
     <tr>
       <th>2</th>
@@ -1316,14 +1673,14 @@ train_df.head()
       <td>-73.991242</td>
       <td>40.750562</td>
       <td>2</td>
-      <td>0.008504</td>
-      <td>0.010708</td>
-      <td>0.013674</td>
-      <td>416.848376</td>
       <td>0</td>
       <td>3</td>
       <td>8</td>
       <td>2011</td>
+      <td>0.008504</td>
+      <td>0.010708</td>
+      <td>0.013674</td>
+      <td>416.848376</td>
     </tr>
     <tr>
       <th>3</th>
@@ -1335,14 +1692,14 @@ train_df.head()
       <td>-73.991567</td>
       <td>40.758092</td>
       <td>1</td>
-      <td>0.004437</td>
-      <td>0.024949</td>
-      <td>0.025340</td>
-      <td>303.861732</td>
       <td>4</td>
       <td>5</td>
       <td>4</td>
       <td>2012</td>
+      <td>0.004437</td>
+      <td>0.024949</td>
+      <td>0.025340</td>
+      <td>303.861732</td>
     </tr>
     <tr>
       <th>4</th>
@@ -1354,14 +1711,14 @@ train_df.head()
       <td>-73.956655</td>
       <td>40.783762</td>
       <td>1</td>
-      <td>0.011440</td>
-      <td>0.015754</td>
-      <td>0.019470</td>
-      <td>272.220407</td>
       <td>7</td>
       <td>1</td>
       <td>3</td>
       <td>2010</td>
+      <td>0.011440</td>
+      <td>0.015754</td>
+      <td>0.019470</td>
+      <td>272.220407</td>
     </tr>
     <tr>
       <th>5</th>
@@ -1373,14 +1730,14 @@ train_df.head()
       <td>-73.972892</td>
       <td>40.758233</td>
       <td>1</td>
-      <td>0.028072</td>
-      <td>0.026603</td>
-      <td>0.038675</td>
-      <td>312.863485</td>
       <td>9</td>
       <td>3</td>
       <td>1</td>
       <td>2011</td>
+      <td>0.028072</td>
+      <td>0.026603</td>
+      <td>0.038675</td>
+      <td>312.863485</td>
     </tr>
   </tbody>
 </table>
@@ -1388,16 +1745,10 @@ train_df.head()
 
 
 
-Our model will take the form  X⋅w=y  where  X  is a matrix of input features, and  y  is a column of the target variable, fare_amount, for each row. The weight column  w  is what we will "learn".
-
-First let's setup our input matrix  X  and target column  y  from our training set. The matrix  X  should consist of the two GPS coordinate differences, plus a third term of 1 to allow the model to learn a constant bias term. The column  y  should consist of the target fare_amount values.
-
 
 ```python
-# Construct and return an Nx3 input matrix for our linear model
-# using the travel vector, plus a 1.0 for a constant bias term.
 def get_input_matrix(df):
-    return np.column_stack((df.passenger_count, df.longitude_distance, df.latitude_distance, df.distance, df.hour, df.weekday, df.month, df.year, np.ones(len(df))))
+    return np.column_stack((df.passenger_count, df.hour, df.weekday, df.month, df.year, df.abs_diff_longitude, df.abs_diff_latitude, np.ones(len(df))))
 
 train_X = get_input_matrix(train_df)
 train_y = np.array(train_df['fare_amount'])
@@ -1406,8 +1757,8 @@ print(train_X.shape)
 print(train_y.shape)
 ```
 
-    (8224381, 9)
-    (8224381,)
+    (8203939, 8)
+    (8203939,)
 
 
 
@@ -1416,9 +1767,8 @@ print(train_y.shape)
 print(w)
 ```
 
-    [ 1.17226317e-01  1.56755040e-02  1.22347660e-02 -1.44528738e-02
-     -3.02436198e-02 -2.22568186e-02  1.13357319e-01  7.17530547e-01
-     -1.43157532e+03]
+    [ 7.22998460e-02  1.68596349e-03 -2.58805752e-02  9.46214495e-02
+      6.52325783e-01  1.45891991e+02  7.60138750e+01 -1.30638699e+03]
 
 
 
@@ -1427,16 +1777,14 @@ w_OLS = np.matmul(np.matmul(np.linalg.inv(np.matmul(train_X.T, train_X)), train_
 print(w_OLS)
 ```
 
-    [ 1.17226318e-01  1.56755040e-02  1.22347660e-02 -1.44528738e-02
-     -3.02436198e-02 -2.22568186e-02  1.13357319e-01  7.17530547e-01
-     -1.43157532e+03]
+    [ 7.22998464e-02  1.68596343e-03 -2.58805750e-02  9.46214495e-02
+      6.52325783e-01  1.45891991e+02  7.60138750e+01 -1.30638699e+03]
 
 
 
 ```python
-test_df = add_distance_dif_features(test_df)
-test_df = calculate_add_distance_feature(test_df)
 test_df = add_time_features(test_df)
+add_travel_vector_features(test_df)
 test_df.head()
 ```
 
@@ -1468,13 +1816,12 @@ test_df.head()
       <th>dropoff_longitude</th>
       <th>dropoff_latitude</th>
       <th>passenger_count</th>
-      <th>longitude_distance</th>
-      <th>latitude_distance</th>
-      <th>distance</th>
       <th>hour</th>
       <th>weekday</th>
       <th>month</th>
       <th>year</th>
+      <th>abs_diff_longitude</th>
+      <th>abs_diff_latitude</th>
     </tr>
   </thead>
   <tbody>
@@ -1487,13 +1834,12 @@ test_df.head()
       <td>-73.981430</td>
       <td>40.743835</td>
       <td>1</td>
-      <td>0.008110</td>
-      <td>0.019970</td>
-      <td>0.021554</td>
       <td>13</td>
       <td>1</td>
       <td>1</td>
       <td>2015</td>
+      <td>0.008110</td>
+      <td>0.019970</td>
     </tr>
     <tr>
       <th>1</th>
@@ -1504,13 +1850,12 @@ test_df.head()
       <td>-73.998886</td>
       <td>40.739201</td>
       <td>1</td>
-      <td>0.012024</td>
-      <td>0.019817</td>
-      <td>0.023180</td>
       <td>13</td>
       <td>1</td>
       <td>1</td>
       <td>2015</td>
+      <td>0.012024</td>
+      <td>0.019817</td>
     </tr>
     <tr>
       <th>2</th>
@@ -1521,13 +1866,12 @@ test_df.head()
       <td>-73.979654</td>
       <td>40.746139</td>
       <td>1</td>
-      <td>0.002870</td>
-      <td>0.005121</td>
-      <td>0.005870</td>
       <td>11</td>
       <td>5</td>
       <td>10</td>
       <td>2011</td>
+      <td>0.002870</td>
+      <td>0.005121</td>
     </tr>
     <tr>
       <th>3</th>
@@ -1538,13 +1882,12 @@ test_df.head()
       <td>-73.990448</td>
       <td>40.751635</td>
       <td>1</td>
-      <td>0.009288</td>
-      <td>0.016172</td>
-      <td>0.018649</td>
       <td>21</td>
       <td>5</td>
       <td>12</td>
       <td>2012</td>
+      <td>0.009288</td>
+      <td>0.016172</td>
     </tr>
     <tr>
       <th>4</th>
@@ -1555,13 +1898,12 @@ test_df.head()
       <td>-73.988565</td>
       <td>40.744427</td>
       <td>1</td>
-      <td>0.022519</td>
-      <td>0.045348</td>
-      <td>0.050631</td>
       <td>21</td>
       <td>5</td>
       <td>12</td>
       <td>2012</td>
+      <td>0.022519</td>
+      <td>0.045348</td>
     </tr>
   </tbody>
 </table>
@@ -1575,7 +1917,7 @@ test_X = get_input_matrix(test_df)
 print(test_X.shape)
 ```
 
-    (9914, 9)
+    (9914, 8)
 
 
 
@@ -1588,10 +1930,10 @@ test_y_predictions = np.matmul(test_X, w).round(decimals = 2)
 submission = pd.DataFrame(
     {'key': test_df.key, 'fare_amount': test_y_predictions},
     columns = ['key', 'fare_amount'])
-submission.to_csv('submission1.csv', index = False)
+submission.to_csv('test.csv', index = False)
 
 print(os.listdir('.'))
 ```
 
-    ['__notebook__.ipynb', 'submission1.csv']
+    ['__notebook__.ipynb', 'test.csv']
 
