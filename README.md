@@ -1,6 +1,6 @@
 
 # New York City Taxi Fare Prediction
-![image.png](attachment:image.png)
+![image.png](https://github.com/cosmicray001/New_York_City_Taxi_Fare_Prediction/blob/master/img/cover.jpg)
 
 In this assignment, we will foresee the passage sum for a taxi ride in New York City, surrendered the pick, drop off areas and the date season of the get. We will begin from making an easiest model after some essential information cleaning, this straightforward model isn't Machine Learning, at that point we will move to more complex models. We should begin.
 
