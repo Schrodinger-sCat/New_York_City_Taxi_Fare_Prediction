@@ -31,10 +31,10 @@ for dirname, _, filenames in os.walk('/kaggle/input'):
 # You can also write temporary files to /kaggle/temp/, but they won't be saved outside of the current session
 ```
 
-    /kaggle/input/new-york-city-taxi-fare-prediction/sample_submission.csv
     /kaggle/input/new-york-city-taxi-fare-prediction/GCP-Coupons-Instructions.rtf
-    /kaggle/input/new-york-city-taxi-fare-prediction/test.csv
     /kaggle/input/new-york-city-taxi-fare-prediction/train.csv
+    /kaggle/input/new-york-city-taxi-fare-prediction/test.csv
+    /kaggle/input/new-york-city-taxi-fare-prediction/sample_submission.csv
 
 
 
@@ -1223,7 +1223,7 @@ train_df.passenger_count.hist()
 
 
 
-    <matplotlib.axes._subplots.AxesSubplot at 0x7ffa00b3c990>
+    <matplotlib.axes._subplots.AxesSubplot at 0x7fb0fa476c50>
 
 
 
@@ -1952,7 +1952,7 @@ submission.to_csv('submission.csv', index = False)
 print(os.listdir('.'))
 ```
 
-    ['submission.csv', '__notebook__.ipynb']
+    ['__notebook__.ipynb', 'submission.csv']
 
 
 Now we have our submission.csv file that contains the predicted fare.
@@ -2018,6 +2018,39 @@ result_df.head()
 </table>
 </div>
 
+
+
+#### Result Evaluation:
+The evaluation metric for this project is the root mean-squared error or RMSE. RMSE measures the difference between the predictions of a model, and the corresponding ground truth. A large RMSE is equivalent to a large average error, so smaller values of RMSE are better. One nice property of RMSE is that the error is given in the units being measured, so you can tell very directly how incorrect the model might be on unseen data.<br>
+RMSE is given by:<br>
+![image.png](https://github.com/cosmicray001/New_York_City_Taxi_Fare_Prediction/blob/master/img/eq001.png)
+where yi is the ith observation and ^yi is the prediction for that observation.
+
+Example 1. Suppose we have one observation, with an actual value of 12.5 and a prediction of 12.5 (good job!). The RMSE will be:<br>
+![image.png](https://github.com/cosmicray001/New_York_City_Taxi_Fare_Prediction/blob/master/img/eq002.png)
+
+Example 2. We'll add another data point. Your prediction for the second data point is 11.0 and the actual value is 14.0. The RMSE will be:<br>
+![image.png](https://github.com/cosmicray001/New_York_City_Taxi_Fare_Prediction/blob/master/img/eq003.png)
+
+
+```python
+approch = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+RMSE = [9.39599, 5.74184, 5.72030, 5.74240, 5.64520, 5.65298, 5.64798, 5.64792, 5.66021, 5.66021]
+plt.plot(approch, RMSE)
+plt.ylabel("RMSE");
+plt.xlabel("Approch");
+plt.title("Model progress")
+```
+
+
+
+
+    Text(0.5, 1.0, 'Model progress')
+
+
+
+
+![png](output_79_1.png)
 
 
 ## conclusion:
