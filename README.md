@@ -3,6 +3,16 @@
 ![image.png](https://github.com/cosmicray001/New_York_City_Taxi_Fare_Prediction/blob/master/img/cover.jpg)
 
 In this assignment, we will foresee the passage sum for a taxi ride in New York City, surrendered the pick, drop off areas and the date season of the get. We will begin from making an easiest model after some essential information cleaning, this straightforward model isn't Machine Learning, at that point we will move to more complex models. We should begin.
+## Table of Contents
+- [X] [Environment setup for python](#environment-setup-for-python)
+- [X] [dataset observations](#dataset-observations)
+- [X] [Data cleaning](#data-cleaning)
+- [X] [Feature Engineering](#feature-engineering)
+- [X] [data visualization](#data-visualization)
+- [X] [Fare Prediction](#fare-prediction)
+- [X] [Result Evaluation](#result-evaluation)
+- [X] [conclusion](#conclusion)
+- [X] [reference](#reference)
 
 ## Environment setup for python
 At first, we have to import the python libraries which will be used in this project. Then we have to lead the tarin and test data. But our train data has almost 55M rows and it's quite impossible for us to use the whole dataset. That's why we'll a part of the dataset.
@@ -2020,7 +2030,7 @@ result_df.head()
 
 
 
-#### Result Evaluation:
+### Result Evaluation:
 The evaluation metric for this project is the root mean-squared error or RMSE. RMSE measures the difference between the predictions of a model, and the corresponding ground truth. A large RMSE is equivalent to a large average error, so smaller values of RMSE are better. One nice property of RMSE is that the error is given in the units being measured, so you can tell very directly how incorrect the model might be on unseen data.<br>
 RMSE is given by:<br>
 ![image.png](https://github.com/cosmicray001/New_York_City_Taxi_Fare_Prediction/blob/master/img/eq001.png)
