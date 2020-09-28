@@ -31,10 +31,10 @@ for dirname, _, filenames in os.walk('/kaggle/input'):
 # You can also write temporary files to /kaggle/temp/, but they won't be saved outside of the current session
 ```
 
-    /kaggle/input/new-york-city-taxi-fare-prediction/GCP-Coupons-Instructions.rtf
-    /kaggle/input/new-york-city-taxi-fare-prediction/train.csv
-    /kaggle/input/new-york-city-taxi-fare-prediction/test.csv
     /kaggle/input/new-york-city-taxi-fare-prediction/sample_submission.csv
+    /kaggle/input/new-york-city-taxi-fare-prediction/GCP-Coupons-Instructions.rtf
+    /kaggle/input/new-york-city-taxi-fare-prediction/test.csv
+    /kaggle/input/new-york-city-taxi-fare-prediction/train.csv
 
 
 
@@ -1223,7 +1223,7 @@ train_df.passenger_count.hist()
 
 
 
-    <matplotlib.axes._subplots.AxesSubplot at 0x7f1a5585b790>
+    <matplotlib.axes._subplots.AxesSubplot at 0x7ffa00b3c990>
 
 
 
@@ -1557,7 +1557,10 @@ axs[1].set_title("Zoom in on distance < 15  and fare < $100")
 ![png](output_57_1.png)
 
 
-## Train our model
+## Fare Prediction
+So far, we have cleaned up our dataset, have done feature engineering and done visualization. Now it's time to predict the fare.
+
+At the very 1st time, we had only 8 columns in out train dataset. But after doing a lots of operation now our tarin data set has some new columns. Mainly we'll use theose columns to predict the fare.
 
 
 ```python
@@ -1745,6 +1748,19 @@ train_df.head()
 
 
 
+Here,<br>
+Our model is: X * m = Y<br>
+where, X = a matrix of input feature<br>
+Y = target variable (fare)<br>
+and m = weight<br>
+So, in our training session, model will learn some weight that will be kept in m.
+
+Now, we have to decide which columns form train value are going to feed as X.<br>
+Here we'll use: <br>
+passenger_count, hour, weekday, month, year, abs_diff_longitude, abs_diff_latitude from train dataset and also will be added 1 as bias.<br>
+And then numpy's lstsq library function will be used to find the optimal weight column  m.
+
+
 
 ```python
 def get_input_matrix(df):
@@ -1763,23 +1779,18 @@ print(train_y.shape)
 
 
 ```python
-(w, _, _, _) = np.linalg.lstsq(train_X, train_y, rcond = None)
-print(w)
+(m, _, _, _) = np.linalg.lstsq(train_X, train_y, rcond = None)
+print(m)
 ```
 
     [ 7.22998460e-02  1.68596349e-03 -2.58805752e-02  9.46214495e-02
       6.52325783e-01  1.45891991e+02  7.60138750e+01 -1.30638699e+03]
 
 
-
-```python
-w_OLS = np.matmul(np.matmul(np.linalg.inv(np.matmul(train_X.T, train_X)), train_X.T), train_y)
-print(w_OLS)
-```
-
-    [ 7.22998464e-02  1.68596343e-03 -2.58805750e-02  9.46214495e-02
-      6.52325783e-01  1.45891991e+02  7.60138750e+01 -1.30638699e+03]
-
+Finally it's time to predict the fare using test date but before that we have to make a matrix same as X and to do that we are reusing:<br>
+add_time_features<br>
+add_travel_vector_features<br>
+function
 
 
 ```python
@@ -1920,20 +1931,106 @@ print(test_X.shape)
     (9914, 8)
 
 
+Now we have, <br>
+test_X, m from train section. So it's time to find the test_Y
+
 
 ```python
-test_y_predictions = np.matmul(test_X, w).round(decimals = 2)
+test_y_predictions = np.matmul(test_X, m).round(decimals = 2)
 ```
+
+This will generate a CSV file to submit result in kaggle
+
 
 
 ```python
 submission = pd.DataFrame(
     {'key': test_df.key, 'fare_amount': test_y_predictions},
     columns = ['key', 'fare_amount'])
-submission.to_csv('test.csv', index = False)
+submission.to_csv('submission.csv', index = False)
 
 print(os.listdir('.'))
 ```
 
-    ['__notebook__.ipynb', 'test.csv']
+    ['submission.csv', '__notebook__.ipynb']
 
+
+Now we have our submission.csv file that contains the predicted fare.
+
+
+```python
+result_df = pd.read_csv('./submission.csv')
+result_df.head()
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>key</th>
+      <th>fare_amount</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>2015-01-27 13:08:24.0000002</td>
+      <td>10.91</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2015-01-27 13:08:24.0000003</td>
+      <td>11.47</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2011-10-08 11:53:44.0000002</td>
+      <td>7.16</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2012-12-01 21:12:12.0000002</td>
+      <td>9.79</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2012-12-01 21:12:12.0000003</td>
+      <td>13.94</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+## conclusion:
+
+New York City Taxi Fare Prediction is a very interesting real life problem to solve. By solving this problem one can get in to ML world.
+##### Further Improvement:
+New York City Taxi Fare Prediction has a very lagre dataset. A small part of that is used here. So by using large amount of rows can imporve the result. We also have used a linear model. Using a complex and non-linear model can also improve the result as well.
+
+### reference:
+- [NumPy](https://numpy.org/)
+- [Matplotlib](https://matplotlib.org/)
+- [pandas](https://pandas.pydata.org/)
+- [An Introduction to Linear Regression Analysis](https://youtu.be/zPG4NjIkCjc)
+- [Kernels Starter Tutorial](https://www.kaggle.com/breemen/nyc-taxi-fare-data-exploration)
+- [Easy to use map and GPS tool](https://www.gps-coordinates.net/)
+- [Calculate distance between locations](https://www.travelmath.com/distance/)
